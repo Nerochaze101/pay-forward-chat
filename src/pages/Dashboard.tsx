@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { getProfile, getMessages, getWithdrawals, updateUsername, requestWithdrawal } from "@/lib/supabase-helpers";
+import { getProfile, getMessages, getWithdrawals, updateUsername, requestWithdrawal, getQuestionsByProfile, getRepliesByQuestion, deleteQuestion } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check } from "lucide-react";
+import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check, HelpCircle, Trash2 } from "lucide-react";
+import CreateQuestion from "@/components/CreateQuestion";
+import QuestionCard from "@/components/QuestionCard";
 
 export default function Dashboard() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -16,9 +18,11 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [questionReplies, setQuestionReplies] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [tab, setTab] = useState<"messages" | "earnings">("messages");
+  const [tab, setTab] = useState<"messages" | "questions" | "earnings">("messages");
 
   // Withdrawal form
   const [showWithdraw, setShowWithdraw] = useState(false);
@@ -46,9 +50,17 @@ export default function Dashboard() {
       const p = await getProfile(user!.id);
       setProfile(p);
       setNewUsername(p.username);
-      const [msgs, wds] = await Promise.all([getMessages(p.id), getWithdrawals(p.id)]);
+      const [msgs, wds, qs] = await Promise.all([getMessages(p.id), getWithdrawals(p.id), getQuestionsByProfile(p.id)]);
       setMessages(msgs);
       setWithdrawals(wds);
+      setQuestions(qs);
+      // Load replies for each question
+      const repliesMap: Record<string, any[]> = {};
+      await Promise.all(qs.map(async (q: any) => {
+        const replies = await getRepliesByQuestion(q.id);
+        repliesMap[q.id] = replies;
+      }));
+      setQuestionReplies(repliesMap);
     } catch (err: any) {
       toast({ title: "Error loading data", description: err.message, variant: "destructive" });
     } finally {
@@ -197,6 +209,12 @@ export default function Dashboard() {
             Messages
           </button>
           <button
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "questions" ? "gradient-bg text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            onClick={() => setTab("questions")}
+          >
+            Questions
+          </button>
+          <button
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "earnings" ? "gradient-bg text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
             onClick={() => setTab("earnings")}
           >
@@ -218,6 +236,56 @@ export default function Dashboard() {
                   <span className="text-xs text-muted-foreground mt-2 block">
                     {new Date(m.created_at).toLocaleString()}
                   </span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === "questions" && (
+          <div className="space-y-4">
+            <CreateQuestion profileId={profile.id} displayName={profile.display_name || profile.username} onCreated={loadData} />
+            {questions.length === 0 ? (
+              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">
+                <HelpCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p>No questions yet. Create one and share the link!</p>
+              </div>
+            ) : (
+              questions.map((q) => (
+                <div key={q.id} className="glass-card rounded-xl p-5 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <QuestionCard questionText={q.question_text} bgColor={q.bg_color} displayName={profile.display_name || profile.username} compact />
+                    <button
+                      onClick={async () => { await deleteQuestion(q.id); loadData(); }}
+                      className="text-muted-foreground hover:text-destructive ml-3 mt-2 shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{(questionReplies[q.id] || []).length} replies</span>
+                    <span>·</span>
+                    <span>{new Date(q.created_at).toLocaleDateString()}</span>
+                    <button
+                      className="text-primary hover:underline ml-auto"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/q/${q.id}`);
+                        toast({ title: "Link copied!" });
+                      }}
+                    >
+                      Copy link
+                    </button>
+                  </div>
+                  {(questionReplies[q.id] || []).length > 0 && (
+                    <div className="space-y-2 pt-2 border-t border-border">
+                      {(questionReplies[q.id] || []).map((r: any) => (
+                        <div key={r.id} className="bg-secondary rounded-lg p-3">
+                          <p className="text-sm text-foreground">{r.content}</p>
+                          <span className="text-xs text-muted-foreground mt-1 block">{new Date(r.created_at).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))
             )}
