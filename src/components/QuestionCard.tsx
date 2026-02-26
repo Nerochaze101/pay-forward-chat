@@ -1,11 +1,12 @@
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, Sparkles } from "lucide-react";
+import { useRef } from "react";
 
-const GRADIENT_PRESETS: Record<string, string> = {
-  "#6366f1": "from-indigo-500 to-purple-600",
-  "#ec4899": "from-pink-500 to-rose-600",
-  "#f97316": "from-orange-500 to-red-500",
-  "#10b981": "from-emerald-500 to-teal-600",
-  "#3b82f6": "from-blue-500 to-cyan-500",
+const GRADIENT_PRESETS: Record<string, { bg: string; glow: string }> = {
+  "#6366f1": { bg: "from-indigo-500 via-violet-500 to-purple-600", glow: "shadow-[0_0_40px_rgba(99,102,241,0.3)]" },
+  "#ec4899": { bg: "from-pink-500 via-rose-400 to-fuchsia-600", glow: "shadow-[0_0_40px_rgba(236,72,153,0.3)]" },
+  "#f97316": { bg: "from-orange-500 via-amber-400 to-red-500", glow: "shadow-[0_0_40px_rgba(249,115,22,0.3)]" },
+  "#10b981": { bg: "from-emerald-500 via-green-400 to-teal-600", glow: "shadow-[0_0_40px_rgba(16,185,129,0.3)]" },
+  "#3b82f6": { bg: "from-blue-500 via-sky-400 to-cyan-500", glow: "shadow-[0_0_40px_rgba(59,130,246,0.3)]" },
 };
 
 interface QuestionCardProps {
@@ -13,29 +14,43 @@ interface QuestionCardProps {
   bgColor: string;
   displayName?: string;
   compact?: boolean;
+  cardRef?: React.RefObject<HTMLDivElement>;
 }
 
-export default function QuestionCard({ questionText, bgColor, displayName, compact }: QuestionCardProps) {
-  const gradientClass = GRADIENT_PRESETS[bgColor] || "from-indigo-500 to-purple-600";
+export default function QuestionCard({ questionText, bgColor, displayName, compact, cardRef }: QuestionCardProps) {
+  const preset = GRADIENT_PRESETS[bgColor] || GRADIENT_PRESETS["#6366f1"];
 
   return (
-    <div className={`relative rounded-2xl bg-gradient-to-br ${gradientClass} shadow-xl overflow-hidden ${compact ? "p-5" : "p-8"}`}>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
+    <div
+      ref={cardRef}
+      className={`relative rounded-2xl bg-gradient-to-br ${preset.bg} ${preset.glow} overflow-hidden ${compact ? "p-5" : "p-8"}`}
+    >
+      {/* Decorative layers */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.2),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_90%,rgba(0,0,0,0.2),transparent_50%)]" />
+      <div className="absolute top-3 right-3 opacity-10">
+        <Sparkles className="w-16 h-16 text-white" />
+      </div>
+
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-3 opacity-80">
-          <HelpCircle className="w-4 h-4 text-white" />
-          <span className="text-white/80 text-xs font-medium">
-            {displayName || "Someone"} asks:
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <HelpCircle className="w-3.5 h-3.5 text-white" />
+          </div>
+          <span className="text-white/90 text-xs font-semibold tracking-wide uppercase">
+            {displayName || "Someone"} asks
           </span>
         </div>
         <h3 className={`font-display font-bold text-white leading-snug ${compact ? "text-base" : "text-xl"}`}>
           {questionText}
         </h3>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-white/50 text-[10px] font-display">WhisperBox</span>
-          <span className="text-white/50 text-[10px]">Anonymous replies</span>
+        <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-3">
+          <span className="text-white/40 text-[10px] font-display font-semibold tracking-widest uppercase">WhisperBox</span>
+          <span className="text-white/40 text-[10px] tracking-wide">✦ Anonymous replies</span>
         </div>
       </div>
     </div>
   );
 }
+
+export { GRADIENT_PRESETS };

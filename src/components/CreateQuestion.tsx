@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { createQuestion } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check, Plus, X } from "lucide-react";
+import { Copy, Check, Plus, X, Download, Share2 } from "lucide-react";
 import QuestionCard from "./QuestionCard";
+import html2canvas from "html2canvas";
 
 const COLOR_OPTIONS = [
   { value: "#6366f1", label: "Indigo" },
@@ -26,7 +27,9 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
   const [creating, setCreating] = useState(false);
   const [createdLink, setCreatedLink] = useState("");
   const [copied, setCopied] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const { toast } = useToast();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleCreate = async () => {
     if (!text.trim()) return;
@@ -49,7 +52,35 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareToWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(`Answer my question anonymously! ${createdLink}`)}`, "_blank");
+  const downloadImage = async () => {
+    if (!cardRef.current) return;
+    setDownloading(true);
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        scale: 3,
+        backgroundColor: null,
+        useCORS: true,
+        logging: false,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = "whisperbox-question.png";
+      a.click();
+      toast({ title: "Image downloaded!", description: "Share this image along with your link." });
+    } catch {
+      toast({ title: "Download failed", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const shareText = `Answer my question anonymously! 👀\n\n${createdLink}`;
+  const shareToWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+  const shareToTwitter = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, "_blank");
+  const shareToFacebook = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(createdLink)}`, "_blank");
+  const shareToTelegram = () => window.open(`https://t.me/share/url?url=${encodeURIComponent(createdLink)}&text=${encodeURIComponent("Answer my question anonymously! 👀")}`, "_blank");
+  const shareToSnapchat = () => window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(createdLink)}`, "_blank");
 
   const reset = () => {
     setText("");
@@ -60,17 +91,17 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
 
   if (!open) {
     return (
-      <Button variant="hero" onClick={() => setOpen(true)} className="gap-2">
+      <Button variant="hero" onClick={() => setOpen(true)} className="gap-2 animate-glow-pulse">
         <Plus className="w-4 h-4" /> Ask a Question
       </Button>
     );
   }
 
   return (
-    <div className="glass-card rounded-2xl p-6 space-y-4">
+    <div className="glass-card rounded-2xl p-6 space-y-4 animate-border-glow">
       <div className="flex items-center justify-between">
         <h3 className="font-display text-lg font-semibold">Create a Question</h3>
-        <button onClick={() => { setOpen(false); reset(); }} className="text-muted-foreground hover:text-foreground">
+        <button onClick={() => { setOpen(false); reset(); }} className="text-muted-foreground hover:text-foreground transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -81,7 +112,7 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="What's your question? e.g. 'What do you really think about me?'"
-            className="w-full h-24 bg-secondary border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+            className="w-full h-24 bg-secondary border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary text-sm transition-all"
             maxLength={200}
           />
           <p className="text-xs text-muted-foreground text-right">{text.length}/200</p>
@@ -93,7 +124,7 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
                 <button
                   key={c.value}
                   onClick={() => setColor(c.value)}
-                  className={`w-8 h-8 rounded-full transition-all ${color === c.value ? "ring-2 ring-white ring-offset-2 ring-offset-background scale-110" : "opacity-70 hover:opacity-100"}`}
+                  className={`w-8 h-8 rounded-full transition-all ${color === c.value ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110" : "opacity-70 hover:opacity-100"}`}
                   style={{ backgroundColor: c.value }}
                   title={c.label}
                 />
@@ -114,18 +145,37 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
         </>
       ) : (
         <div className="space-y-4 animate-fade-up">
-          <QuestionCard questionText={text} bgColor={color} displayName={displayName} compact />
+          {/* Downloadable card */}
+          <QuestionCard questionText={text} bgColor={color} displayName={displayName} cardRef={cardRef} />
+
+          {/* Download as image */}
+          <Button variant="hero" className="w-full gap-2" onClick={downloadImage} disabled={downloading}>
+            <Download className="w-4 h-4" />
+            {downloading ? "Generating image..." : "Download as Photo"}
+          </Button>
+
+          {/* Copy link */}
           <div className="flex gap-2">
             <input value={createdLink} readOnly className="flex-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground" />
-            <Button size="icon" variant="hero" onClick={copyLink}>
+            <Button size="icon" variant="hero-outline" onClick={copyLink}>
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>WhatsApp</Button>
-            <Button size="sm" variant="secondary" onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Answer my question anonymously! ${createdLink}`)}`, "_blank")}>Twitter / X</Button>
-            <Button size="sm" variant="secondary" onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(createdLink)}`, "_blank")}>Facebook</Button>
+
+          {/* Share buttons */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+              <Share2 className="w-3 h-3" /> Share link on
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>WhatsApp</Button>
+              <Button size="sm" variant="secondary" onClick={shareToTwitter}>Twitter / X</Button>
+              <Button size="sm" variant="secondary" onClick={shareToFacebook}>Facebook</Button>
+              <Button size="sm" variant="secondary" onClick={shareToTelegram}>Telegram</Button>
+              <Button size="sm" variant="secondary" onClick={shareToSnapchat}>Snapchat</Button>
+            </div>
           </div>
+
           <Button variant="hero-outline" className="w-full" onClick={reset}>Create Another</Button>
         </div>
       )}

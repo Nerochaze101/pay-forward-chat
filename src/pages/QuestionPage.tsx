@@ -3,15 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { getQuestionById, sendQuestionReply, recordPageView } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
-import { Send, HelpCircle } from "lucide-react";
-
-const GRADIENT_PRESETS: Record<string, string> = {
-  "#6366f1": "from-indigo-500 to-purple-600",
-  "#ec4899": "from-pink-500 to-rose-600",
-  "#f97316": "from-orange-500 to-red-500",
-  "#10b981": "from-emerald-500 to-teal-600",
-  "#3b82f6": "from-blue-500 to-cyan-500",
-};
+import { Send, Sparkles } from "lucide-react";
+import QuestionCard from "@/components/QuestionCard";
 
 export default function QuestionPage() {
   const { questionId } = useParams<{ questionId: string }>();
@@ -53,8 +46,9 @@ export default function QuestionPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center">
+      <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-spotlight pointer-events-none" />
+        <div className="relative text-center">
           <h1 className="font-display text-2xl font-bold mb-2">Question not found</h1>
           <p className="text-muted-foreground mb-6">This link may be invalid.</p>
           <Link to="/"><Button variant="hero">Go Home</Button></Link>
@@ -71,41 +65,33 @@ export default function QuestionPage() {
     );
   }
 
-  const gradientClass = GRADIENT_PRESETS[question.bg_color] || "from-indigo-500 to-purple-600";
   const profile = question.profiles;
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4 py-8">
+      <div className="fixed inset-0 bg-spotlight pointer-events-none" />
+      <div className="relative w-full max-w-md">
         <Link to="/" className="block text-center mb-8">
-          <span className="font-display text-lg font-bold gradient-text">WhisperBox</span>
+          <span className="font-display text-lg font-bold gradient-text inline-flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            WhisperBox
+          </span>
         </Link>
 
-        {/* Question Card — the "shareable image" look */}
-        <div className={`relative rounded-2xl p-8 bg-gradient-to-br ${gradientClass} shadow-2xl mb-6 overflow-hidden`}>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-4 opacity-80">
-              <HelpCircle className="w-5 h-5 text-white" />
-              <span className="text-white/80 text-sm font-medium">
-                {profile?.display_name || profile?.username} asks:
-              </span>
-            </div>
-            <h2 className="font-display text-2xl font-bold text-white leading-snug">
-              {question.question_text}
-            </h2>
-            <div className="mt-6 flex items-center justify-between">
-              <span className="text-white/50 text-xs font-display">WhisperBox</span>
-              <span className="text-white/50 text-xs">Anonymous replies</span>
-            </div>
-          </div>
+        {/* Question Card */}
+        <div className="mb-6">
+          <QuestionCard
+            questionText={question.question_text}
+            bgColor={question.bg_color}
+            displayName={profile?.display_name || profile?.username}
+          />
         </div>
 
         {/* Reply Form */}
         <div className="glass-card rounded-2xl p-6">
           {sent ? (
             <div className="animate-fade-up text-center">
-              <div className="w-14 h-14 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-4 animate-glow-pulse">
                 <Send className="w-6 h-6 text-success" />
               </div>
               <h3 className="font-display text-lg font-semibold mb-2">Reply Sent!</h3>
@@ -128,7 +114,7 @@ export default function QuestionPage() {
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 placeholder="Type your anonymous reply..."
-                className="w-full h-28 bg-secondary border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary text-sm mb-3"
+                className="w-full h-28 bg-secondary border border-border rounded-xl p-4 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary text-sm mb-3 transition-all"
                 maxLength={1000}
                 required
               />

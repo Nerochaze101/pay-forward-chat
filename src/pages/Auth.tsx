@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Sparkles } from "lucide-react";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -39,10 +40,14 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4">
+      <div className="fixed inset-0 bg-spotlight pointer-events-none" />
+      <div className="relative w-full max-w-md">
         <Link to="/" className="block text-center mb-8">
-          <h1 className="font-display text-2xl font-bold gradient-text">WhisperBox</h1>
+          <h1 className="font-display text-2xl font-bold gradient-text inline-flex items-center gap-2 mx-auto">
+            <Sparkles className="w-5 h-5 text-primary" />
+            WhisperBox
+          </h1>
         </Link>
         <div className="glass-card rounded-2xl p-8">
           <h2 className="font-display text-2xl font-bold text-center mb-2">
@@ -56,37 +61,16 @@ export default function Auth() {
             {isSignup && (
               <div className="space-y-2">
                 <Label htmlFor="name">Display Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Your name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  required
-                />
+                <Input id="name" placeholder="Your name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
               </div>
             )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
             <Button type="submit" variant="hero" className="w-full" disabled={submitting}>
               {submitting ? "Please wait..." : isSignup ? "Create Account" : "Log In"}
@@ -95,10 +79,7 @@ export default function Auth() {
 
           <p className="text-center text-sm text-muted-foreground mt-6">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button
-              className="text-primary hover:underline font-medium"
-              onClick={() => setIsSignup(!isSignup)}
-            >
+            <button className="text-primary hover:underline font-medium" onClick={() => setIsSignup(!isSignup)}>
               {isSignup ? "Log in" : "Sign up"}
             </button>
           </p>

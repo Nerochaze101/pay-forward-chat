@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfile, getMessages, getWithdrawals, updateUsername, requestWithdrawal, getQuestionsByProfile, getRepliesByQuestion, deleteQuestion } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check, HelpCircle, Trash2 } from "lucide-react";
+import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check, HelpCircle, Trash2, Sparkles } from "lucide-react";
 import CreateQuestion from "@/components/CreateQuestion";
 import QuestionCard from "@/components/QuestionCard";
 
@@ -24,7 +24,6 @@ export default function Dashboard() {
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<"messages" | "questions" | "earnings">("messages");
 
-  // Withdrawal form
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [wAmount, setWAmount] = useState("");
   const [wBank, setWBank] = useState("");
@@ -32,7 +31,6 @@ export default function Dashboard() {
   const [wAccName, setWAccName] = useState("");
   const [wSubmitting, setWSubmitting] = useState(false);
 
-  // Username edit
   const [editingUsername, setEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState("");
 
@@ -54,7 +52,6 @@ export default function Dashboard() {
       setMessages(msgs);
       setWithdrawals(wds);
       setQuestions(qs);
-      // Load replies for each question
       const repliesMap: Record<string, any[]> = {};
       await Promise.all(qs.map(async (q: any) => {
         const replies = await getRepliesByQuestion(q.id);
@@ -95,14 +92,8 @@ export default function Dashboard() {
   const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault();
     const amount = Number(wAmount);
-    if (amount < 1000) {
-      toast({ title: "Minimum withdrawal is ₦1,000", variant: "destructive" });
-      return;
-    }
-    if (amount > (profile?.balance ?? 0)) {
-      toast({ title: "Insufficient balance", variant: "destructive" });
-      return;
-    }
+    if (amount < 1000) { toast({ title: "Minimum withdrawal is ₦1,000", variant: "destructive" }); return; }
+    if (amount > (profile?.balance ?? 0)) { toast({ title: "Insufficient balance", variant: "destructive" }); return; }
     setWSubmitting(true);
     try {
       await requestWithdrawal(profile.id, amount, wBank, wAccNum, wAccName);
@@ -130,11 +121,16 @@ export default function Dashboard() {
   const monetized = totalViews >= 2000;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-grid">
+      <div className="fixed inset-0 bg-spotlight pointer-events-none" />
+
       {/* Header */}
-      <header className="border-b border-border px-6 py-4">
+      <header className="relative border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <h1 className="font-display text-xl font-bold gradient-text">WhisperBox</h1>
+          <h1 className="font-display text-xl font-bold gradient-text flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            WhisperBox
+          </h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{profile?.display_name}</span>
             <Button variant="ghost" size="icon" onClick={signOut}>
@@ -144,7 +140,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <main className="relative max-w-5xl mx-auto px-6 py-8 space-y-8">
         {/* Link Section */}
         <div className="glass-card rounded-2xl p-6">
           <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
@@ -158,33 +154,19 @@ export default function Dashboard() {
           </div>
           {editingUsername ? (
             <div className="flex gap-2 items-center mb-4">
-              <Input
-                value={newUsername}
-                onChange={(e) => setNewUsername(e.target.value)}
-                className="max-w-xs"
-                placeholder="new_username"
-              />
+              <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="max-w-xs" placeholder="new_username" />
               <Button size="sm" onClick={handleUsernameUpdate}>Save</Button>
               <Button size="sm" variant="ghost" onClick={() => setEditingUsername(false)}>Cancel</Button>
             </div>
           ) : (
-            <button
-              className="text-xs text-primary hover:underline mb-4 block"
-              onClick={() => setEditingUsername(true)}
-            >
+            <button className="text-xs text-primary hover:underline mb-4 block" onClick={() => setEditingUsername(true)}>
               Edit username
             </button>
           )}
           <div className="flex gap-3 flex-wrap">
-            <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>
-              WhatsApp
-            </Button>
-            <Button size="sm" variant="secondary" onClick={shareToTwitter}>
-              Twitter / X
-            </Button>
-            <Button size="sm" variant="secondary" onClick={shareToFacebook}>
-              Facebook
-            </Button>
+            <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>WhatsApp</Button>
+            <Button size="sm" variant="secondary" onClick={shareToTwitter}>Twitter / X</Button>
+            <Button size="sm" variant="secondary" onClick={shareToFacebook}>Facebook</Button>
           </div>
         </div>
 
@@ -192,34 +174,20 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard icon={MessageCircle} label="Messages" value={messages.length.toString()} />
           <StatCard icon={Eye} label="Total Views" value={totalViews.toLocaleString()} />
-          <StatCard
-            icon={Banknote}
-            label="Balance"
-            value={`₦${earnings.toLocaleString()}`}
-            sub={!monetized ? `${2000 - totalViews} views to activate earnings` : undefined}
-          />
+          <StatCard icon={Banknote} label="Balance" value={`₦${earnings.toLocaleString()}`} sub={!monetized ? `${2000 - totalViews} views to activate earnings` : undefined} />
         </div>
 
         {/* Tabs */}
         <div className="flex gap-1 bg-secondary rounded-lg p-1 w-fit">
-          <button
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "messages" ? "gradient-bg text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setTab("messages")}
-          >
-            Messages
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "questions" ? "gradient-bg text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setTab("questions")}
-          >
-            Questions
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "earnings" ? "gradient-bg text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setTab("earnings")}
-          >
-            Earnings
-          </button>
+          {(["messages", "questions", "earnings"] as const).map((t) => (
+            <button
+              key={t}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${tab === t ? "gradient-bg text-primary-foreground glow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              onClick={() => setTab(t)}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
         </div>
 
         {tab === "messages" && (
@@ -233,9 +201,7 @@ export default function Dashboard() {
               messages.map((m) => (
                 <div key={m.id} className="glass-card rounded-xl p-5">
                   <p className="text-foreground">{m.content}</p>
-                  <span className="text-xs text-muted-foreground mt-2 block">
-                    {new Date(m.created_at).toLocaleString()}
-                  </span>
+                  <span className="text-xs text-muted-foreground mt-2 block">{new Date(m.created_at).toLocaleString()}</span>
                 </div>
               ))
             )}
@@ -254,11 +220,10 @@ export default function Dashboard() {
               questions.map((q) => (
                 <div key={q.id} className="glass-card rounded-xl p-5 space-y-3">
                   <div className="flex items-start justify-between">
-                    <QuestionCard questionText={q.question_text} bgColor={q.bg_color} displayName={profile.display_name || profile.username} compact />
-                    <button
-                      onClick={async () => { await deleteQuestion(q.id); loadData(); }}
-                      className="text-muted-foreground hover:text-destructive ml-3 mt-2 shrink-0"
-                    >
+                    <div className="flex-1">
+                      <QuestionCard questionText={q.question_text} bgColor={q.bg_color} displayName={profile.display_name || profile.username} compact />
+                    </div>
+                    <button onClick={async () => { await deleteQuestion(q.id); loadData(); }} className="text-muted-foreground hover:text-destructive ml-3 mt-2 shrink-0 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -266,13 +231,7 @@ export default function Dashboard() {
                     <span>{(questionReplies[q.id] || []).length} replies</span>
                     <span>·</span>
                     <span>{new Date(q.created_at).toLocaleDateString()}</span>
-                    <button
-                      className="text-primary hover:underline ml-auto"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/q/${q.id}`);
-                        toast({ title: "Link copied!" });
-                      }}
-                    >
+                    <button className="text-primary hover:underline ml-auto" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/q/${q.id}`); toast({ title: "Link copied!" }); }}>
                       Copy link
                     </button>
                   </div>
@@ -300,24 +259,15 @@ export default function Dashboard() {
                   <p className="text-sm text-muted-foreground">Available Balance</p>
                   <p className="font-display text-3xl font-bold">₦{earnings.toLocaleString()}</p>
                 </div>
-                <Button
-                  variant="hero"
-                  onClick={() => setShowWithdraw(true)}
-                  disabled={earnings < 1000}
-                >
-                  Withdraw
-                </Button>
+                <Button variant="hero" onClick={() => setShowWithdraw(true)} disabled={earnings < 1000}>Withdraw</Button>
               </div>
               {!monetized && (
                 <div className="bg-secondary rounded-lg p-3 text-sm text-muted-foreground">
-                  💡 Earn ₦100 per 1,000 views. Monetization activates at 2,000 views.
-                  You currently have {totalViews.toLocaleString()} views.
+                  💡 Earn ₦100 per 1,000 views. Monetization activates at 2,000 views. You currently have {totalViews.toLocaleString()} views.
                 </div>
               )}
               {earnings > 0 && earnings < 1000 && (
-                <div className="bg-secondary rounded-lg p-3 text-sm text-muted-foreground mt-2">
-                  Minimum withdrawal amount is ₦1,000.
-                </div>
+                <div className="bg-secondary rounded-lg p-3 text-sm text-muted-foreground mt-2">Minimum withdrawal amount is ₦1,000.</div>
               )}
             </div>
 
@@ -325,26 +275,12 @@ export default function Dashboard() {
               <div className="glass-card rounded-xl p-6">
                 <h3 className="font-display text-lg font-semibold mb-4">Withdraw Funds</h3>
                 <form onSubmit={handleWithdraw} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Amount (₦)</Label>
-                    <Input type="number" min="1000" value={wAmount} onChange={(e) => setWAmount(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Bank Name</Label>
-                    <Input value={wBank} onChange={(e) => setWBank(e.target.value)} placeholder="e.g. GTBank" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Account Number</Label>
-                    <Input value={wAccNum} onChange={(e) => setWAccNum(e.target.value)} placeholder="0123456789" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Account Name</Label>
-                    <Input value={wAccName} onChange={(e) => setWAccName(e.target.value)} placeholder="John Doe" required />
-                  </div>
+                  <div className="space-y-2"><Label>Amount (₦)</Label><Input type="number" min="1000" value={wAmount} onChange={(e) => setWAmount(e.target.value)} required /></div>
+                  <div className="space-y-2"><Label>Bank Name</Label><Input value={wBank} onChange={(e) => setWBank(e.target.value)} placeholder="e.g. GTBank" required /></div>
+                  <div className="space-y-2"><Label>Account Number</Label><Input value={wAccNum} onChange={(e) => setWAccNum(e.target.value)} placeholder="0123456789" required /></div>
+                  <div className="space-y-2"><Label>Account Name</Label><Input value={wAccName} onChange={(e) => setWAccName(e.target.value)} placeholder="John Doe" required /></div>
                   <div className="flex gap-3">
-                    <Button type="submit" variant="hero" disabled={wSubmitting}>
-                      {wSubmitting ? "Submitting..." : "Submit Request"}
-                    </Button>
+                    <Button type="submit" variant="hero" disabled={wSubmitting}>{wSubmitting ? "Submitting..." : "Submit Request"}</Button>
                     <Button type="button" variant="ghost" onClick={() => setShowWithdraw(false)}>Cancel</Button>
                   </div>
                 </form>
@@ -361,11 +297,7 @@ export default function Dashboard() {
                         <p className="font-medium">₦{w.amount.toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        w.status === "completed" ? "bg-success/20 text-success" :
-                        w.status === "pending" ? "bg-warning/20 text-warning" :
-                        "bg-destructive/20 text-destructive"
-                      }`}>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${w.status === "completed" ? "bg-success/20 text-success" : w.status === "pending" ? "bg-warning/20 text-warning" : "bg-destructive/20 text-destructive"}`}>
                         {w.status}
                       </span>
                     </div>
@@ -382,9 +314,9 @@ export default function Dashboard() {
 
 function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string; value: string; sub?: string }) {
   return (
-    <div className="glass-card rounded-xl p-5">
+    <div className="glass-card rounded-xl p-5 group hover:scale-[1.02] transition-transform duration-300">
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-9 h-9 rounded-lg gradient-bg flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg gradient-bg flex items-center justify-center group-hover:animate-glow-pulse">
           <Icon className="w-4 h-4 text-primary-foreground" />
         </div>
         <span className="text-sm text-muted-foreground">{label}</span>

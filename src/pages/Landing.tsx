@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { MessageCircle, Eye, Banknote, Share2 } from "lucide-react";
+import { MessageCircle, Eye, Banknote, Share2, Sparkles, HelpCircle, Zap } from "lucide-react";
 
 const features = [
   {
@@ -9,9 +9,9 @@ const features = [
     description: "Receive honest, unfiltered messages from anyone — completely anonymous.",
   },
   {
-    icon: Share2,
-    title: "Share Everywhere",
-    description: "Share your unique link on WhatsApp, Twitter, Facebook and more.",
+    icon: HelpCircle,
+    title: "Question Cards",
+    description: "Create beautiful question cards, download as images, and share everywhere.",
   },
   {
     icon: Eye,
@@ -27,10 +27,16 @@ const features = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-grid">
+      {/* Spotlight effect */}
+      <div className="fixed inset-0 bg-spotlight pointer-events-none" />
+
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
-        <h1 className="font-display text-xl font-bold gradient-text">WhisperBox</h1>
+      <nav className="relative flex items-center justify-between px-6 py-4 max-w-6xl mx-auto">
+        <h1 className="font-display text-xl font-bold gradient-text flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          WhisperBox
+        </h1>
         <div className="flex gap-3">
           <Link to="/auth">
             <Button variant="ghost" size="sm">Log in</Button>
@@ -42,10 +48,11 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-32 text-center">
+      <section className="relative max-w-6xl mx-auto px-6 pt-20 pb-32 text-center">
         <div className="animate-fade-up">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            🔥 Get paid for going viral
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 glow-border">
+            <Zap className="w-3 h-3 inline mr-1" />
+            Get paid for going viral
           </span>
         </div>
         <h2 className="font-display text-5xl sm:text-7xl font-bold leading-tight mb-6 animate-fade-up-delay-1">
@@ -58,7 +65,7 @@ export default function Landing() {
         </p>
         <div className="flex gap-4 justify-center animate-fade-up-delay-3">
           <Link to="/auth?mode=signup">
-            <Button variant="hero" size="lg" className="text-base px-8 py-6">
+            <Button variant="hero" size="lg" className="text-base px-8 py-6 animate-glow-pulse">
               Create Your Link
             </Button>
           </Link>
@@ -71,14 +78,14 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section className="max-w-6xl mx-auto px-6 pb-32">
+      <section className="relative max-w-6xl mx-auto px-6 pb-32">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f, i) => (
             <div
               key={f.title}
-              className={`glass-card rounded-xl p-6 animate-fade-up-delay-${Math.min(i + 1, 3)}`}
+              className={`glass-card rounded-xl p-6 animate-fade-up-delay-${Math.min(i + 1, 3)} group hover:scale-[1.02] transition-transform duration-300`}
             >
-              <div className="w-12 h-12 rounded-lg gradient-bg flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-lg gradient-bg flex items-center justify-center mb-4 group-hover:animate-glow-pulse transition-shadow">
                 <f.icon className="w-6 h-6 text-primary-foreground" />
               </div>
               <h3 className="font-display text-lg font-semibold mb-2">{f.title}</h3>
@@ -89,7 +96,7 @@ export default function Landing() {
       </section>
 
       {/* How it works */}
-      <section className="max-w-4xl mx-auto px-6 pb-32 text-center">
+      <section className="relative max-w-4xl mx-auto px-6 pb-32 text-center">
         <h2 className="font-display text-3xl font-bold mb-12">
           How it <span className="gradient-text">works</span>
         </h2>
@@ -109,7 +116,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8">
+      <footer className="relative border-t border-border py-8">
         <div className="max-w-6xl mx-auto px-6 text-center text-sm text-muted-foreground">
           © 2026 WhisperBox. All rights reserved.
         </div>
