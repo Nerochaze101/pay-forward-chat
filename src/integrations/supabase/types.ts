@@ -105,6 +105,67 @@ export type Database = {
         }
         Relationships: []
       }
+      question_replies: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          question_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          question_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_replies_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          bg_color: string
+          created_at: string
+          id: string
+          profile_id: string
+          question_text: string
+        }
+        Insert: {
+          bg_color?: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          question_text: string
+        }
+        Update: {
+          bg_color?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          question_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       withdrawals: {
         Row: {
           account_name: string

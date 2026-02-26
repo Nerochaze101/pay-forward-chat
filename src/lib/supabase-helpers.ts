@@ -80,3 +80,60 @@ export async function requestWithdrawal(
     });
   if (error) throw error;
 }
+
+// ── Questions ──
+
+export async function createQuestion(profileId: string, questionText: string, bgColor: string) {
+  const { data, error } = await supabase
+    .from("questions")
+    .insert({ profile_id: profileId, question_text: questionText, bg_color: bgColor })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getQuestionById(questionId: string) {
+  const { data, error } = await supabase
+    .from("questions")
+    .select("*, profiles(username, display_name)")
+    .eq("id", questionId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getQuestionsByProfile(profileId: string) {
+  const { data, error } = await supabase
+    .from("questions")
+    .select("*")
+    .eq("profile_id", profileId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function deleteQuestion(questionId: string) {
+  const { error } = await supabase
+    .from("questions")
+    .delete()
+    .eq("id", questionId);
+  if (error) throw error;
+}
+
+export async function sendQuestionReply(questionId: string, content: string) {
+  const { error } = await supabase
+    .from("question_replies")
+    .insert({ question_id: questionId, content });
+  if (error) throw error;
+}
+
+export async function getRepliesByQuestion(questionId: string) {
+  const { data, error } = await supabase
+    .from("question_replies")
+    .select("*")
+    .eq("question_id", questionId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
