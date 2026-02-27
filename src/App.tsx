@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import MessagePage from "./pages/MessagePage";
 import QuestionPage from "./pages/QuestionPage";
 import NotFound from "./pages/NotFound";
+import AdWebView from "./components/AdWebView";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AdWebView />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
