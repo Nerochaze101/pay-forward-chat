@@ -46,7 +46,7 @@ export default function QuestionPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4 pt-20">
         <div className="fixed inset-0 bg-spotlight pointer-events-none" />
         <div className="relative text-center">
           <h1 className="font-display text-2xl font-bold mb-2">Question not found</h1>
@@ -68,7 +68,7 @@ export default function QuestionPage() {
   const profile = question.profiles;
 
   return (
-    <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4 pt-20 pb-8">
       <div className="fixed inset-0 bg-spotlight pointer-events-none" />
       <div className="relative w-full max-w-md">
         <Link to="/" className="block text-center mb-8">
