@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ad View</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a12;
+      color: #fff;
+      font-family: sans-serif;
+      overflow-x: hidden;
+      padding: 8px;
+    }
+    .ad-block { margin-bottom: 12px; display: flex; justify-content: center; }
+    #container-d3086215aaf6d1aac4a8cf2c4eda801b { display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="ad-block">
+    <script>
+      atOptions = {
+        'key' : '9effa3562d5aac5edcf587ad7df01754',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+    <script src="https://www.highperformanceformat.com/9effa3562d5aac5edcf587ad7df01754/invoke.js"></script>
+  </div>
+
+  <div class="ad-block">
+    <script src="https://pl28091887.effectivegatecpm.com/cf/47/df/cf47df159320ecb4f3636e497a6d0d1f.js"></script>
+  </div>
+
+  <div class="ad-block">
+    <script async="async" data-cfasync="false" src="https://pl28091865.effectivegatecpm.com/d3086215aaf6d1aac4a8cf2c4eda801b/invoke.js"></script>
+    <div id="container-d3086215aaf6d1aac4a8cf2c4eda801b"></div>
+  </div>
+
+  <div class="ad-block">
+    <script>
+      atOptions = {
+        'key' : '8bd5c897e1f98135aa8350b9bda11e4b',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    </script>
+    <script src="https://www.highperformanceformat.com/8bd5c897e1f98135aa8350b9bda11e4b/invoke.js"></script>
+  </div>
+
+  <script>
+    // Auto-scroll logic
+    let scrollingDown = true;
+    function autoScroll() {
+      const step = 2;
+      if (scrollingDown) {
+        window.scrollBy(0, step);
+        if ((window.innerHeight + window.scrollY) >= document.body.scrollHeight - 2) {
+          scrollingDown = false;
+        }
+      } else {
+        window.scrollBy(0, -step);
+        if (window.scrollY <= 0) {
+          scrollingDown = true;
+        }
+      }
+    }
+    // Scroll every 30ms for smooth movement, pause direction change every 2-4s
+    setInterval(autoScroll, 30);
+  </script>
+</body>
+</html>
