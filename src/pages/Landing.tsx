@@ -27,7 +27,7 @@ const features = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background bg-grid">
+    <div className="min-h-screen bg-background bg-grid pt-20">
       {/* Spotlight effect */}
       <div className="fixed inset-0 bg-spotlight pointer-events-none" />
 

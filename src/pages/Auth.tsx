@@ -40,7 +40,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4 pt-20">
       <div className="fixed inset-0 bg-spotlight pointer-events-none" />
       <div className="relative w-full max-w-md">
         <Link to="/" className="block text-center mb-8">

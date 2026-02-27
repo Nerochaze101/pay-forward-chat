@@ -27,17 +27,17 @@ const AdWebView = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
-      <div className="pointer-events-auto mt-2 mx-2 w-full max-w-[340px] rounded-xl overflow-hidden border border-primary/30 shadow-[0_0_20px_hsl(270_80%_65%/0.2)]"
+      <div className="pointer-events-auto mt-1 mx-2 w-full max-w-[280px] rounded-lg overflow-hidden border border-primary/20 shadow-[0_0_12px_hsl(270_80%_65%/0.15)]"
         style={{ background: "hsl(250 18% 7% / 0.95)", backdropFilter: "blur(16px)" }}
       >
         {/* Top bar */}
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-primary/20">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-destructive" />
-            <span className="w-2 h-2 rounded-full bg-warning" />
-            <span className="w-2 h-2 rounded-full bg-success" />
+        <div className="flex items-center justify-between px-2 py-1 border-b border-primary/15">
+          <div className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+            <span className="w-1.5 h-1.5 rounded-full bg-warning" />
+            <span className="w-1.5 h-1.5 rounded-full bg-success" />
           </div>
-          <span className="text-[10px] text-muted-foreground font-display tracking-wide">Sponsored</span>
+          <span className="text-[9px] text-muted-foreground font-display tracking-wide">Ad</span>
         </div>
         {/* Iframe */}
         <iframe
@@ -45,7 +45,7 @@ const AdWebView = () => {
           key={iframeKey}
           src="/adview.html"
           className="w-full border-0"
-          style={{ height: "120px" }}
+          style={{ height: "60px" }}
           sandbox="allow-scripts allow-same-origin allow-popups"
           title="Ad View"
         />

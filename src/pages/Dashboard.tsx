@@ -121,7 +121,7 @@ export default function Dashboard() {
   const monetized = totalViews >= 2000;
 
   return (
-    <div className="min-h-screen bg-background bg-grid">
+    <div className="min-h-screen bg-background bg-grid pt-20">
       <div className="fixed inset-0 bg-spotlight pointer-events-none" />
 
       {/* Header */}
