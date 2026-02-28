@@ -2,9 +2,10 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { createQuestion } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check, Plus, X, Download, Share2 } from "lucide-react";
+import { Copy, Check, Plus, X, Share2, Palette } from "lucide-react";
 import QuestionCard from "./QuestionCard";
 import SuggestionQuestions from "./SuggestionQuestions";
+import { SocialShareButtons } from "./SocialIcons";
 import html2canvas from "html2canvas";
 
 const COLOR_OPTIONS = [
@@ -28,7 +29,7 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
   const [creating, setCreating] = useState(false);
   const [createdLink, setCreatedLink] = useState("");
   const [copied, setCopied] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const { toast } = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -53,9 +54,9 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const downloadImage = async () => {
+  const shareImage = async () => {
     if (!cardRef.current) return;
-    setDownloading(true);
+    setSharing(true);
     try {
       const canvas = await html2canvas(cardRef.current, {
         scale: 3,
@@ -63,30 +64,32 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
         useCORS: true,
         logging: false,
       });
-      const dataUrl = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = "whisperbox-question.png";
-      a.click();
-      toast({ title: "Image downloaded!", description: "Post this image and paste the link in your caption." });
+      const blob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob((b) => resolve(b!), "image/png")
+      );
+      const file = new File([blob], "whisperbox-question.png", { type: "image/png" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          text: `Answer my question anonymously! 👀\n\n${createdLink}`,
+          files: [file],
+        });
+      } else {
+        // Fallback: download
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "whisperbox-question.png";
+        a.click();
+        toast({ title: "Image downloaded!", description: "Post this image and paste the link in your caption." });
+      }
     } catch {
-      toast({ title: "Download failed", variant: "destructive" });
+      toast({ title: "Share cancelled or failed", variant: "destructive" });
     } finally {
-      setDownloading(false);
+      setSharing(false);
     }
   };
 
   const shareText = `Answer my question anonymously! 👀\n\n${createdLink}`;
-  const shareToWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
-  const shareToTwitter = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, "_blank");
-  const shareToFacebook = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(createdLink)}`, "_blank");
-  const shareToTelegram = () => window.open(`https://t.me/share/url?url=${encodeURIComponent(createdLink)}&text=${encodeURIComponent("Answer my question anonymously! 👀")}`, "_blank");
-  const shareToSnapchat = () => window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(createdLink)}`, "_blank");
-  const shareToInstagram = () => {
-    // Instagram doesn't have a direct share URL, so we copy the link and guide the user
-    navigator.clipboard.writeText(createdLink);
-    toast({ title: "Link copied!", description: "Download the image, post it on Instagram, and paste the link in your caption." });
-  };
 
   const handleSuggestionSelect = (suggestionText: string, suggestionColor: string) => {
     setText(suggestionText);
@@ -109,7 +112,7 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
   }
 
   return (
-    <div className="glass-card rounded-2xl p-6 space-y-4 animate-border-glow">
+    <div className="glass-card rounded-2xl p-6 space-y-5 animate-border-glow">
       <div className="flex items-center justify-between">
         <h3 className="font-display text-lg font-semibold">Create a Question</h3>
         <button onClick={() => { setOpen(false); reset(); }} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -119,10 +122,7 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
 
       {!createdLink ? (
         <>
-          {/* Suggestion cards */}
-          {!text.trim() && (
-            <SuggestionQuestions onSelect={handleSuggestionSelect} />
-          )}
+          {!text.trim() && <SuggestionQuestions onSelect={handleSuggestionSelect} />}
 
           <textarea
             value={text}
@@ -134,13 +134,15 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
           <p className="text-xs text-muted-foreground text-right">{text.length}/200</p>
 
           <div>
-            <p className="text-xs text-muted-foreground mb-2">Card color</p>
-            <div className="flex gap-2">
+            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5" /> Card color
+            </p>
+            <div className="flex gap-2.5">
               {COLOR_OPTIONS.map((c) => (
                 <button
                   key={c.value}
                   onClick={() => setColor(c.value)}
-                  className={`w-8 h-8 rounded-full transition-all ${color === c.value ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110" : "opacity-70 hover:opacity-100"}`}
+                  className={`w-9 h-9 rounded-full transition-all duration-200 ${color === c.value ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
                   style={{ backgroundColor: c.value }}
                   title={c.label}
                 />
@@ -160,41 +162,40 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
           </Button>
         </>
       ) : (
-        <div className="space-y-4 animate-fade-up">
-          {/* Downloadable card with caption arrow */}
+        <div className="space-y-5 animate-fade-up">
           <QuestionCard questionText={text} bgColor={color} displayName={displayName} cardRef={cardRef} showCaptionArrow />
 
           <p className="text-xs text-center text-muted-foreground">
-            📸 Download this image → Post on your status/story → Paste the link in caption
+            📸 Share this image to your status → paste the link in caption
           </p>
 
-          {/* Download as image */}
-          <Button variant="hero" className="w-full gap-2" onClick={downloadImage} disabled={downloading}>
-            <Download className="w-4 h-4" />
-            {downloading ? "Generating image..." : "Download Image for Status"}
+          {/* Share image button */}
+          <Button variant="hero" className="w-full gap-2" onClick={shareImage} disabled={sharing}>
+            <Share2 className="w-4 h-4" />
+            {sharing ? "Preparing..." : "Share Image to Status"}
           </Button>
 
           {/* Copy link */}
           <div className="flex gap-2">
-            <input value={createdLink} readOnly className="flex-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm font-mono text-foreground" />
+            <input value={createdLink} readOnly className="flex-1 bg-secondary border border-border rounded-xl px-4 py-2.5 text-sm font-mono text-foreground" />
             <Button size="icon" variant="hero-outline" onClick={copyLink}>
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
 
-          {/* Share buttons */}
+          {/* Social share */}
           <div>
-            <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-              <Share2 className="w-3 h-3" /> Share link on
+            <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5">
+              <Share2 className="w-3.5 h-3.5" /> Or share link on
             </p>
-            <div className="flex gap-2 flex-wrap">
-              <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>WhatsApp</Button>
-              <Button size="sm" variant="secondary" onClick={shareToTwitter}>Twitter / X</Button>
-              <Button size="sm" variant="secondary" onClick={shareToInstagram}>Instagram</Button>
-              <Button size="sm" variant="secondary" onClick={shareToSnapchat}>Snapchat</Button>
-              <Button size="sm" variant="secondary" onClick={shareToFacebook}>Facebook</Button>
-              <Button size="sm" variant="secondary" onClick={shareToTelegram}>Telegram</Button>
-            </div>
+            <SocialShareButtons
+              shareText={shareText}
+              shareUrl={createdLink}
+              onInstagramClick={() => {
+                navigator.clipboard.writeText(createdLink);
+                toast({ title: "Link copied!", description: "Paste this link in your Instagram story or bio." });
+              }}
+            />
           </div>
 
           <Button variant="hero-outline" className="w-full" onClick={reset}>Create Another</Button>
