@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfile, getMessages, getWithdrawals, updateUsername, requestWithdrawal, getQuestionsByProfile, getRepliesByQuestion, deleteQuestion } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check, HelpCircle, Trash2, Sparkles } from "lucide-react";
+import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check, HelpCircle, Trash2, Sparkles, Clock } from "lucide-react";
 import CreateQuestion from "@/components/CreateQuestion";
 import QuestionCard from "@/components/QuestionCard";
+import MessageModal from "@/components/MessageModal";
 
 export default function Dashboard() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<"messages" | "questions" | "earnings">("messages");
+  const [selectedMessage, setSelectedMessage] = useState<any>(null);
 
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [wAmount, setWAmount] = useState("");
@@ -77,6 +79,11 @@ export default function Dashboard() {
   const shareToWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(`Send me an anonymous message! ${messageLink}`)}`, "_blank");
   const shareToTwitter = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Send me an anonymous message! ${messageLink}`)}`, "_blank");
   const shareToFacebook = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(messageLink)}`, "_blank");
+  const shareToSnapchat = () => window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(messageLink)}`, "_blank");
+  const shareToInstagram = () => {
+    navigator.clipboard.writeText(messageLink);
+    toast({ title: "Link copied!", description: "Paste this link in your Instagram bio or story." });
+  };
 
   const handleUsernameUpdate = async () => {
     try {
@@ -124,6 +131,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background bg-grid pt-20">
       <div className="fixed inset-0 bg-spotlight pointer-events-none" />
 
+      {/* Message Modal */}
+      <MessageModal message={selectedMessage} onClose={() => setSelectedMessage(null)} />
+
       {/* Header */}
       <header className="relative border-b border-border px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -166,6 +176,8 @@ export default function Dashboard() {
           <div className="flex gap-3 flex-wrap">
             <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>WhatsApp</Button>
             <Button size="sm" variant="secondary" onClick={shareToTwitter}>Twitter / X</Button>
+            <Button size="sm" variant="secondary" onClick={shareToInstagram}>Instagram</Button>
+            <Button size="sm" variant="secondary" onClick={shareToSnapchat}>Snapchat</Button>
             <Button size="sm" variant="secondary" onClick={shareToFacebook}>Facebook</Button>
           </div>
         </div>
@@ -192,6 +204,10 @@ export default function Dashboard() {
 
         {tab === "messages" && (
           <div className="space-y-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+              <Clock className="w-3 h-3" />
+              <span>Messages disappear after 24 hours</span>
+            </div>
             {messages.length === 0 ? (
               <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">
                 <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
@@ -199,10 +215,17 @@ export default function Dashboard() {
               </div>
             ) : (
               messages.map((m) => (
-                <div key={m.id} className="glass-card rounded-xl p-5">
-                  <p className="text-foreground">{m.content}</p>
-                  <span className="text-xs text-muted-foreground mt-2 block">{new Date(m.created_at).toLocaleString()}</span>
-                </div>
+                <button
+                  key={m.id}
+                  className="glass-card rounded-xl p-5 w-full text-left hover:border-primary/30 transition-all cursor-pointer active:scale-[0.98]"
+                  onClick={() => setSelectedMessage(m)}
+                >
+                  <p className="text-foreground line-clamp-2">{m.content}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString()}</span>
+                    <span className="text-xs text-primary">Tap to view</span>
+                  </div>
+                </button>
               ))
             )}
           </div>

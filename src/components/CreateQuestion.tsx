@@ -4,6 +4,7 @@ import { createQuestion } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, Check, Plus, X, Download, Share2 } from "lucide-react";
 import QuestionCard from "./QuestionCard";
+import SuggestionQuestions from "./SuggestionQuestions";
 import html2canvas from "html2canvas";
 
 const COLOR_OPTIONS = [
@@ -67,7 +68,7 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
       a.href = dataUrl;
       a.download = "whisperbox-question.png";
       a.click();
-      toast({ title: "Image downloaded!", description: "Share this image along with your link." });
+      toast({ title: "Image downloaded!", description: "Post this image and paste the link in your caption." });
     } catch {
       toast({ title: "Download failed", variant: "destructive" });
     } finally {
@@ -81,6 +82,16 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
   const shareToFacebook = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(createdLink)}`, "_blank");
   const shareToTelegram = () => window.open(`https://t.me/share/url?url=${encodeURIComponent(createdLink)}&text=${encodeURIComponent("Answer my question anonymously! 👀")}`, "_blank");
   const shareToSnapchat = () => window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(createdLink)}`, "_blank");
+  const shareToInstagram = () => {
+    // Instagram doesn't have a direct share URL, so we copy the link and guide the user
+    navigator.clipboard.writeText(createdLink);
+    toast({ title: "Link copied!", description: "Download the image, post it on Instagram, and paste the link in your caption." });
+  };
+
+  const handleSuggestionSelect = (suggestionText: string, suggestionColor: string) => {
+    setText(suggestionText);
+    setColor(suggestionColor);
+  };
 
   const reset = () => {
     setText("");
@@ -108,6 +119,11 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
 
       {!createdLink ? (
         <>
+          {/* Suggestion cards */}
+          {!text.trim() && (
+            <SuggestionQuestions onSelect={handleSuggestionSelect} />
+          )}
+
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -145,13 +161,17 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
         </>
       ) : (
         <div className="space-y-4 animate-fade-up">
-          {/* Downloadable card */}
-          <QuestionCard questionText={text} bgColor={color} displayName={displayName} cardRef={cardRef} />
+          {/* Downloadable card with caption arrow */}
+          <QuestionCard questionText={text} bgColor={color} displayName={displayName} cardRef={cardRef} showCaptionArrow />
+
+          <p className="text-xs text-center text-muted-foreground">
+            📸 Download this image → Post on your status/story → Paste the link in caption
+          </p>
 
           {/* Download as image */}
           <Button variant="hero" className="w-full gap-2" onClick={downloadImage} disabled={downloading}>
             <Download className="w-4 h-4" />
-            {downloading ? "Generating image..." : "Download as Photo"}
+            {downloading ? "Generating image..." : "Download Image for Status"}
           </Button>
 
           {/* Copy link */}
@@ -170,9 +190,10 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
             <div className="flex gap-2 flex-wrap">
               <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>WhatsApp</Button>
               <Button size="sm" variant="secondary" onClick={shareToTwitter}>Twitter / X</Button>
+              <Button size="sm" variant="secondary" onClick={shareToInstagram}>Instagram</Button>
+              <Button size="sm" variant="secondary" onClick={shareToSnapchat}>Snapchat</Button>
               <Button size="sm" variant="secondary" onClick={shareToFacebook}>Facebook</Button>
               <Button size="sm" variant="secondary" onClick={shareToTelegram}>Telegram</Button>
-              <Button size="sm" variant="secondary" onClick={shareToSnapchat}>Snapchat</Button>
             </div>
           </div>
 

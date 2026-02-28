@@ -1,5 +1,4 @@
-import { HelpCircle, Sparkles } from "lucide-react";
-import { useRef } from "react";
+import { HelpCircle, Sparkles, ArrowDown } from "lucide-react";
 
 const GRADIENT_PRESETS: Record<string, { bg: string; glow: string }> = {
   "#6366f1": { bg: "from-indigo-500 via-violet-500 to-purple-600", glow: "shadow-[0_0_40px_rgba(99,102,241,0.3)]" },
@@ -15,9 +14,10 @@ interface QuestionCardProps {
   displayName?: string;
   compact?: boolean;
   cardRef?: React.RefObject<HTMLDivElement>;
+  showCaptionArrow?: boolean;
 }
 
-export default function QuestionCard({ questionText, bgColor, displayName, compact, cardRef }: QuestionCardProps) {
+export default function QuestionCard({ questionText, bgColor, displayName, compact, cardRef, showCaptionArrow }: QuestionCardProps) {
   const preset = GRADIENT_PRESETS[bgColor] || GRADIENT_PRESETS["#6366f1"];
 
   return (
@@ -48,6 +48,15 @@ export default function QuestionCard({ questionText, bgColor, displayName, compa
           <span className="text-white/40 text-[10px] font-display font-semibold tracking-widest uppercase">WhisperBox</span>
           <span className="text-white/40 text-[10px] tracking-wide">✦ Anonymous replies</span>
         </div>
+
+        {/* Caption arrow indicator for social sharing */}
+        {showCaptionArrow && (
+          <div className="mt-4 flex items-center justify-center gap-2 animate-bounce">
+            <ArrowDown className="w-5 h-5 text-white/70" />
+            <span className="text-white/70 text-xs font-semibold">Link in caption</span>
+            <ArrowDown className="w-5 h-5 text-white/70" />
+          </div>
+        )}
       </div>
     </div>
   );
