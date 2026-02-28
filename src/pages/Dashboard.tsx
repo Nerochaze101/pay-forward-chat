@@ -6,10 +6,11 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfile, getMessages, getWithdrawals, updateUsername, requestWithdrawal, getQuestionsByProfile, getRepliesByQuestion, deleteQuestion } from "@/lib/supabase-helpers";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check, HelpCircle, Trash2, Sparkles, Clock } from "lucide-react";
+import { Copy, LogOut, MessageCircle, Eye, Banknote, Share2, Check, HelpCircle, Trash2, Sparkles, Clock, ChevronRight } from "lucide-react";
 import CreateQuestion from "@/components/CreateQuestion";
 import QuestionCard from "@/components/QuestionCard";
 import MessageModal from "@/components/MessageModal";
+import { SocialShareButtons } from "@/components/SocialIcons";
 
 export default function Dashboard() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -76,15 +77,6 @@ export default function Dashboard() {
     toast({ title: "Link copied!" });
   };
 
-  const shareToWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(`Send me an anonymous message! ${messageLink}`)}`, "_blank");
-  const shareToTwitter = () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Send me an anonymous message! ${messageLink}`)}`, "_blank");
-  const shareToFacebook = () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(messageLink)}`, "_blank");
-  const shareToSnapchat = () => window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(messageLink)}`, "_blank");
-  const shareToInstagram = () => {
-    navigator.clipboard.writeText(messageLink);
-    toast({ title: "Link copied!", description: "Paste this link in your Instagram bio or story." });
-  };
-
   const handleUsernameUpdate = async () => {
     try {
       await updateUsername(profile.id, newUsername);
@@ -118,7 +110,10 @@ export default function Dashboard() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full gradient-bg animate-glow-pulse" />
+          <span className="text-muted-foreground text-sm">Loading...</span>
+        </div>
       </div>
     );
   }
@@ -127,103 +122,138 @@ export default function Dashboard() {
   const totalViews = profile?.total_views ?? 0;
   const monetized = totalViews >= 2000;
 
+  const tabs = [
+    { key: "messages" as const, label: "Messages", icon: MessageCircle, count: messages.length },
+    { key: "questions" as const, label: "Questions", icon: HelpCircle, count: questions.length },
+    { key: "earnings" as const, label: "Earnings", icon: Banknote },
+  ];
+
   return (
-    <div className="min-h-screen bg-background bg-grid pt-20">
+    <div className="min-h-screen bg-background bg-grid">
       <div className="fixed inset-0 bg-spotlight pointer-events-none" />
 
-      {/* Message Modal */}
       <MessageModal message={selectedMessage} onClose={() => setSelectedMessage(null)} />
 
       {/* Header */}
-      <header className="relative border-b border-border px-6 py-4">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <h1 className="font-display text-xl font-bold gradient-text flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
+      <header className="relative border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-2xl mx-auto flex items-center justify-between px-4 py-3">
+          <h1 className="font-display text-lg font-bold gradient-text flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
             WhisperBox
           </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{profile?.display_name}</span>
-            <Button variant="ghost" size="icon" onClick={signOut}>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground hidden sm:block">{profile?.display_name}</span>
+            <Button variant="ghost" size="icon" onClick={signOut} className="h-8 w-8">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="relative max-w-5xl mx-auto px-6 py-8 space-y-8">
-        {/* Link Section */}
-        <div className="glass-card rounded-2xl p-6">
-          <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
-            <Share2 className="w-5 h-5 text-primary" /> Your Message Link
-          </h2>
-          <div className="flex gap-2 mb-4">
-            <Input value={messageLink} readOnly className="font-mono text-sm" />
-            <Button variant="hero" size="icon" onClick={copyLink}>
+      <main className="relative max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Welcome & Link */}
+        <div className="glass-card rounded-2xl p-5 space-y-4">
+          <div>
+            <h2 className="font-display text-xl font-bold mb-1">
+              Hey, {profile?.display_name || profile?.username} 👋
+            </h2>
+            <p className="text-sm text-muted-foreground">Share your link to receive anonymous messages</p>
+          </div>
+
+          <div className="flex gap-2">
+            <Input value={messageLink} readOnly className="font-mono text-xs bg-secondary/50" />
+            <Button variant="hero" size="icon" onClick={copyLink} className="shrink-0">
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
+
           {editingUsername ? (
-            <div className="flex gap-2 items-center mb-4">
-              <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="max-w-xs" placeholder="new_username" />
+            <div className="flex gap-2 items-center">
+              <Input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="max-w-[200px] text-sm" placeholder="new_username" />
               <Button size="sm" onClick={handleUsernameUpdate}>Save</Button>
               <Button size="sm" variant="ghost" onClick={() => setEditingUsername(false)}>Cancel</Button>
             </div>
           ) : (
-            <button className="text-xs text-primary hover:underline mb-4 block" onClick={() => setEditingUsername(true)}>
+            <button className="text-xs text-primary hover:underline" onClick={() => setEditingUsername(true)}>
               Edit username
             </button>
           )}
-          <div className="flex gap-3 flex-wrap">
-            <Button size="sm" variant="secondary" onClick={shareToWhatsApp}>WhatsApp</Button>
-            <Button size="sm" variant="secondary" onClick={shareToTwitter}>Twitter / X</Button>
-            <Button size="sm" variant="secondary" onClick={shareToInstagram}>Instagram</Button>
-            <Button size="sm" variant="secondary" onClick={shareToSnapchat}>Snapchat</Button>
-            <Button size="sm" variant="secondary" onClick={shareToFacebook}>Facebook</Button>
-          </div>
+
+          <SocialShareButtons
+            shareText={`Send me an anonymous message! ${messageLink}`}
+            shareUrl={messageLink}
+            onInstagramClick={() => {
+              navigator.clipboard.writeText(messageLink);
+              toast({ title: "Link copied!", description: "Paste this link in your Instagram bio or story." });
+            }}
+          />
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-3">
           <StatCard icon={MessageCircle} label="Messages" value={messages.length.toString()} />
-          <StatCard icon={Eye} label="Total Views" value={totalViews.toLocaleString()} />
-          <StatCard icon={Banknote} label="Balance" value={`₦${earnings.toLocaleString()}`} sub={!monetized ? `${2000 - totalViews} views to activate earnings` : undefined} />
+          <StatCard icon={Eye} label="Views" value={totalViews.toLocaleString()} />
+          <StatCard icon={Banknote} label="Balance" value={`₦${earnings.toLocaleString()}`} />
         </div>
+
+        {!monetized && (
+          <div className="bg-primary/5 border border-primary/10 rounded-xl px-4 py-3 text-xs text-muted-foreground flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span>{2000 - totalViews} more views to activate earnings (₦100 per 1,000 views)</span>
+          </div>
+        )}
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-secondary rounded-lg p-1 w-fit">
-          {(["messages", "questions", "earnings"] as const).map((t) => (
+        <div className="flex gap-1 bg-secondary/50 rounded-xl p-1 border border-border">
+          {tabs.map((t) => (
             <button
-              key={t}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${tab === t ? "gradient-bg text-primary-foreground glow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              onClick={() => setTab(t)}
+              key={t.key}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                tab === t.key
+                  ? "gradient-bg text-primary-foreground shadow-lg glow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setTab(t.key)}
             >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              <t.icon className="w-4 h-4" />
+              <span className="hidden sm:inline">{t.label}</span>
+              {t.count !== undefined && t.count > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                  tab === t.key ? "bg-white/20" : "bg-primary/10 text-primary"
+                }`}>{t.count}</span>
+              )}
             </button>
           ))}
         </div>
 
+        {/* Messages Tab */}
         {tab === "messages" && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="w-3 h-3" />
               <span>Messages disappear after 24 hours</span>
             </div>
             {messages.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">
-                <MessageCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p>No messages yet. Share your link to start receiving messages!</p>
+              <div className="glass-card rounded-2xl p-10 text-center">
+                <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center mx-auto mb-4 animate-float">
+                  <MessageCircle className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <p className="font-display font-semibold mb-1">No messages yet</p>
+                <p className="text-sm text-muted-foreground">Share your link to start receiving messages!</p>
               </div>
             ) : (
               messages.map((m) => (
                 <button
                   key={m.id}
-                  className="glass-card rounded-xl p-5 w-full text-left hover:border-primary/30 transition-all cursor-pointer active:scale-[0.98]"
+                  className="glass-card rounded-2xl p-5 w-full text-left hover:border-primary/30 transition-all duration-200 cursor-pointer active:scale-[0.98] group"
                   onClick={() => setSelectedMessage(m)}
                 >
-                  <p className="text-foreground line-clamp-2">{m.content}</p>
-                  <div className="flex items-center justify-between mt-2">
+                  <p className="text-foreground line-clamp-2 text-sm">{m.content}</p>
+                  <div className="flex items-center justify-between mt-3">
                     <span className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString()}</span>
-                    <span className="text-xs text-primary">Tap to view</span>
+                    <span className="text-xs text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+                      View <ChevronRight className="w-3 h-3" />
+                    </span>
                   </div>
                 </button>
               ))
@@ -231,37 +261,40 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Questions Tab */}
         {tab === "questions" && (
           <div className="space-y-4">
             <CreateQuestion profileId={profile.id} displayName={profile.display_name || profile.username} onCreated={loadData} />
             {questions.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">
-                <HelpCircle className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p>No questions yet. Create one and share the link!</p>
+              <div className="glass-card rounded-2xl p-10 text-center">
+                <div className="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center mx-auto mb-4 animate-float">
+                  <HelpCircle className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <p className="font-display font-semibold mb-1">No questions yet</p>
+                <p className="text-sm text-muted-foreground">Create one and share the link!</p>
               </div>
             ) : (
               questions.map((q) => (
-                <div key={q.id} className="glass-card rounded-xl p-5 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div key={q.id} className="glass-card rounded-2xl p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <QuestionCard questionText={q.question_text} bgColor={q.bg_color} displayName={profile.display_name || profile.username} compact />
                     </div>
-                    <button onClick={async () => { await deleteQuestion(q.id); loadData(); }} className="text-muted-foreground hover:text-destructive ml-3 mt-2 shrink-0 transition-colors">
+                    <button onClick={async () => { await deleteQuestion(q.id); loadData(); }} className="text-muted-foreground hover:text-destructive mt-2 shrink-0 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{(questionReplies[q.id] || []).length} replies</span>
-                    <span>·</span>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{(questionReplies[q.id] || []).length} replies</span>
                     <span>{new Date(q.created_at).toLocaleDateString()}</span>
-                    <button className="text-primary hover:underline ml-auto" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/q/${q.id}`); toast({ title: "Link copied!" }); }}>
-                      Copy link
+                    <button className="text-primary hover:underline ml-auto flex items-center gap-1" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/q/${q.id}`); toast({ title: "Link copied!" }); }}>
+                      <Copy className="w-3 h-3" /> Copy link
                     </button>
                   </div>
                   {(questionReplies[q.id] || []).length > 0 && (
-                    <div className="space-y-2 pt-2 border-t border-border">
+                    <div className="space-y-2 pt-3 border-t border-border">
                       {(questionReplies[q.id] || []).map((r: any) => (
-                        <div key={r.id} className="bg-secondary rounded-lg p-3">
+                        <div key={r.id} className="bg-secondary/50 border border-border rounded-xl p-3">
                           <p className="text-sm text-foreground">{r.content}</p>
                           <span className="text-xs text-muted-foreground mt-1 block">{new Date(r.created_at).toLocaleString()}</span>
                         </div>
@@ -274,28 +307,24 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Earnings Tab */}
         {tab === "earnings" && (
           <div className="space-y-4">
-            <div className="glass-card rounded-xl p-6">
+            <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Available Balance</p>
-                  <p className="font-display text-3xl font-bold">₦{earnings.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Available Balance</p>
+                  <p className="font-display text-3xl font-bold gradient-text">₦{earnings.toLocaleString()}</p>
                 </div>
                 <Button variant="hero" onClick={() => setShowWithdraw(true)} disabled={earnings < 1000}>Withdraw</Button>
               </div>
-              {!monetized && (
-                <div className="bg-secondary rounded-lg p-3 text-sm text-muted-foreground">
-                  💡 Earn ₦100 per 1,000 views. Monetization activates at 2,000 views. You currently have {totalViews.toLocaleString()} views.
-                </div>
-              )}
               {earnings > 0 && earnings < 1000 && (
-                <div className="bg-secondary rounded-lg p-3 text-sm text-muted-foreground mt-2">Minimum withdrawal amount is ₦1,000.</div>
+                <div className="bg-secondary/50 border border-border rounded-xl p-3 text-sm text-muted-foreground">Minimum withdrawal amount is ₦1,000.</div>
               )}
             </div>
 
             {showWithdraw && (
-              <div className="glass-card rounded-xl p-6">
+              <div className="glass-card rounded-2xl p-6">
                 <h3 className="font-display text-lg font-semibold mb-4">Withdraw Funds</h3>
                 <form onSubmit={handleWithdraw} className="space-y-4">
                   <div className="space-y-2"><Label>Amount (₦)</Label><Input type="number" min="1000" value={wAmount} onChange={(e) => setWAmount(e.target.value)} required /></div>
@@ -311,16 +340,16 @@ export default function Dashboard() {
             )}
 
             {withdrawals.length > 0 && (
-              <div className="glass-card rounded-xl p-6">
-                <h3 className="font-display text-lg font-semibold mb-4">Withdrawal History</h3>
+              <div className="glass-card rounded-2xl p-6">
+                <h3 className="font-display text-lg font-semibold mb-4">History</h3>
                 <div className="space-y-3">
                   {withdrawals.map((w) => (
                     <div key={w.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                       <div>
-                        <p className="font-medium">₦{w.amount.toLocaleString()}</p>
+                        <p className="font-medium text-sm">₦{w.amount.toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${w.status === "completed" ? "bg-success/20 text-success" : w.status === "pending" ? "bg-warning/20 text-warning" : "bg-destructive/20 text-destructive"}`}>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${w.status === "completed" ? "bg-success/20 text-success" : w.status === "pending" ? "bg-warning/20 text-warning" : "bg-destructive/20 text-destructive"}`}>
                         {w.status}
                       </span>
                     </div>
@@ -335,17 +364,14 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub }: { icon: any; label: string; value: string; sub?: string }) {
+function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="glass-card rounded-xl p-5 group hover:scale-[1.02] transition-transform duration-300">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-9 h-9 rounded-lg gradient-bg flex items-center justify-center group-hover:animate-glow-pulse">
-          <Icon className="w-4 h-4 text-primary-foreground" />
-        </div>
-        <span className="text-sm text-muted-foreground">{label}</span>
+    <div className="glass-card rounded-2xl p-4 text-center group hover:scale-[1.02] transition-transform duration-200">
+      <div className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center mx-auto mb-2 group-hover:animate-glow-pulse">
+        <Icon className="w-4 h-4 text-primary-foreground" />
       </div>
-      <p className="font-display text-2xl font-bold">{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+      <p className="font-display text-lg font-bold">{value}</p>
+      <p className="text-[11px] text-muted-foreground">{label}</p>
     </div>
   );
 }
