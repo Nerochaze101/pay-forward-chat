@@ -191,6 +191,7 @@ export default function CreateQuestion({ profileId, displayName, onCreated }: Cr
             <SocialShareButtons
               shareText={shareText}
               shareUrl={createdLink}
+              onImageShare={shareImage}
               onInstagramClick={() => {
                 navigator.clipboard.writeText(createdLink);
                 toast({ title: "Link copied!", description: "Paste this link in your Instagram story or bio." });
