@@ -62,13 +62,19 @@ export function SocialShareButtons({ shareText, shareUrl, onImageShare, onInstag
     }
   };
 
+  const handleShare = async () => {
+    if (onImageShare) {
+      await onImageShare();
+    }
+  };
+
   const buttons = [
-    { icon: WhatsAppIcon, label: "WhatsApp", color: "#25D366", onClick: handleWhatsApp },
-    { icon: TwitterXIcon, label: "X", color: "#ffffff", onClick: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, "_blank") },
-    { icon: InstagramIcon, label: "Instagram", color: "#E4405F", onClick: onInstagramClick || (() => { navigator.clipboard.writeText(shareUrl); }) },
-    { icon: SnapchatIcon, label: "Snapchat", color: "#FFFC00", onClick: () => window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(shareUrl)}`, "_blank") },
-    { icon: FacebookIcon, label: "Facebook", color: "#1877F2", onClick: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, "_blank") },
-    { icon: TelegramIcon, label: "Telegram", color: "#26A5E4", onClick: () => window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, "_blank") },
+    { icon: WhatsAppIcon, label: "WhatsApp", color: "#25D366", onClick: handleShare },
+    { icon: TwitterXIcon, label: "X", color: "#ffffff", onClick: handleShare },
+    { icon: InstagramIcon, label: "Instagram", color: "#E4405F", onClick: handleShare },
+    { icon: SnapchatIcon, label: "Snapchat", color: "#FFFC00", onClick: handleShare },
+    { icon: FacebookIcon, label: "Facebook", color: "#1877F2", onClick: handleShare },
+    { icon: TelegramIcon, label: "Telegram", color: "#26A5E4", onClick: handleShare },
   ];
 
   return (
