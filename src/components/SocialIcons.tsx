@@ -49,12 +49,21 @@ export function TelegramIcon({ className = "w-5 h-5" }: { className?: string }) 
 interface SocialShareButtonsProps {
   shareText: string;
   shareUrl: string;
+  onImageShare?: () => Promise<void>;
   onInstagramClick?: () => void;
 }
 
-export function SocialShareButtons({ shareText, shareUrl, onInstagramClick }: SocialShareButtonsProps) {
+export function SocialShareButtons({ shareText, shareUrl, onImageShare, onInstagramClick }: SocialShareButtonsProps) {
+  const handleWhatsApp = async () => {
+    if (onImageShare) {
+      await onImageShare();
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+    }
+  };
+
   const buttons = [
-    { icon: WhatsAppIcon, label: "WhatsApp", color: "#25D366", onClick: () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank") },
+    { icon: WhatsAppIcon, label: "WhatsApp", color: "#25D366", onClick: handleWhatsApp },
     { icon: TwitterXIcon, label: "X", color: "#ffffff", onClick: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, "_blank") },
     { icon: InstagramIcon, label: "Instagram", color: "#E4405F", onClick: onInstagramClick || (() => { navigator.clipboard.writeText(shareUrl); }) },
     { icon: SnapchatIcon, label: "Snapchat", color: "#FFFC00", onClick: () => window.open(`https://www.snapchat.com/scan?attachmentUrl=${encodeURIComponent(shareUrl)}`, "_blank") },
